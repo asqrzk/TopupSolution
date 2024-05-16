@@ -1,0 +1,42 @@
+version: '3.4'
+
+services:
+    db:
+        container_name: sqlserver
+        image: "mcr.microsoft.com/azure-sql-edge:latest"
+        environment:
+            - ACCEPT_EULA=1
+            - MSSQL_SA_PASSWORD=Verysecretpassword@123
+        networks:
+            - topup-network
+        ports:
+            - "1433:1433"
+        volumes:
+            - ./data:/var/opt/mssql
+
+    topupproject:
+        image: ${DOCKER_REGISTRY-}topupproject
+        ports:
+            - "8080:80"
+        networks:
+            - topup-network
+        build:
+            context: .
+            dockerfile: TopupProject/Dockerfile
+        depends_on:
+            - db
+
+    balanceproject:
+        image: ${DOCKER_REGISTRY-}balanceproject
+        ports:
+            - "8001:80"
+        networks:
+            - topup-network
+        build:
+          context: .
+          dockerfile: BalanceProject/Dockerfile
+
+
+networks:
+    topup-network:
+        driver: bridge
